@@ -1,227 +1,530 @@
-// Smooth scrolling for internal links, mobile nav toggle, fake form submission,
-// and dynamic rendering + search for the Books section.
+/* ===== Global reset & base ===== */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
 
-document.addEventListener("DOMContentLoaded", () => {
-  // ==========
-  // Smooth scroll for nav and hero buttons
-  // ==========
-  const navLinks = document.querySelectorAll('a[href^="#"]');
-  navLinks.forEach((link) => {
-    link.addEventListener("click", (e) => {
-      const targetId = link.getAttribute("href");
-      if (targetId && targetId.startsWith("#")) {
-        const target = document.querySelector(targetId);
-        if (target) {
-          e.preventDefault();
-          const offset = 70; // account for sticky nav
-          const rect = target.getBoundingClientRect();
-          const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-          const top = rect.top + scrollTop - offset;
+:root {
+  --bg: #050816;
+  --bg-alt: #0c1022;
+  --bg-soft: #10172f;
+  --accent: #f97391;
+  --accent-soft: rgba(249, 115, 145, 0.1);
+  --accent-strong: #fb7185;
+  --text: #f9fafb;
+  --text-soft: #d1d5db;
+  --border-subtle: rgba(148, 163, 184, 0.3);
+  --pill-bg: rgba(15, 23, 42, 0.75);
+  --card-bg: rgba(15, 23, 42, 0.9);
+  --shadow-soft: 0 18px 45px rgba(15, 23, 42, 0.7);
+  --radius-lg: 18px;
+  --radius-xl: 26px;
+}
 
-          window.scrollTo({
-            top,
-            behavior: "smooth",
-          });
+html,
+body {
+  margin: 0;
+  padding: 0;
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  background: radial-gradient(circle at top, #1e293b 0, #020617 40%, #020617 100%);
+  color: var(--text);
+}
 
-          // close mobile nav after clicking
-          navMenu.classList.remove("open");
-        }
-      }
-    });
-  });
+/* ===== Layout helpers ===== */
+.container {
+  width: 100%;
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
 
-  // ==========
-  // Mobile nav toggle
-  // ==========
-  const navToggle = document.querySelector(".nav-toggle");
-  const navMenu = document.querySelector(".nav-links");
+.section {
+  padding: 4.5rem 0;
+}
 
-  if (navToggle && navMenu) {
-    navToggle.addEventListener("click", () => {
-      navMenu.classList.toggle("open");
-    });
+.section.alt {
+  background: radial-gradient(circle at top left, #020617 0, #020617 55%, #050816 100%);
+}
+
+.section.highlight {
+  background: linear-gradient(120deg, #0f172a, #020617);
+}
+
+.section h2 {
+  font-size: 2rem;
+  margin-bottom: 0.75rem;
+}
+
+.section-subtitle {
+  margin-top: 0;
+  margin-bottom: 2.5rem;
+  color: var(--text-soft);
+  max-width: 640px;
+}
+
+.grid {
+  display: grid;
+  gap: 1.75rem;
+}
+
+.grid-2 {
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.grid-3 {
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+/* ===== Header / Nav ===== */
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  backdrop-filter: blur(22px);
+  background: linear-gradient(to bottom, rgba(15, 23, 42, 0.95), transparent);
+  border-bottom: 1px solid rgba(31, 41, 55, 0.8);
+}
+
+.nav-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.85rem 1.5rem;
+}
+
+.logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.logo-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  background: radial-gradient(circle at top, var(--accent), #fb7185);
+  display: grid;
+  place-items: center;
+  font-size: 1.1rem;
+  box-shadow: 0 10px 25px rgba(248, 113, 113, 0.4);
+}
+
+.logo-text {
+  font-size: 1rem;
+  text-transform: uppercase;
+}
+
+.main-nav {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.main-nav a {
+  font-size: 0.9rem;
+  text-decoration: none;
+  color: var(--text-soft);
+  padding: 0.35rem 0.6rem;
+  border-radius: 999px;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.main-nav a:hover {
+  color: var(--text);
+  background: rgba(15, 23, 42, 0.9);
+}
+
+.main-nav .nav-cta {
+  background: var(--accent);
+  color: #111827;
+  padding-inline: 0.9rem;
+  font-weight: 600;
+}
+
+.nav-toggle {
+  display: none;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-size: 1.4rem;
+}
+
+/* ===== Hero ===== */
+.hero {
+  padding: 4.5rem 0 3.5rem;
+}
+
+.hero-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2.2fr);
+  gap: 2.5rem;
+  align-items: center;
+}
+
+.hero-text h1 {
+  font-size: clamp(2.2rem, 4vw, 3.1rem);
+  line-height: 1.1;
+  margin-bottom: 0.9rem;
+}
+
+.hero-subtitle {
+  color: var(--text-soft);
+  max-width: 540px;
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+}
+
+.eyebrow {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--accent-strong);
+  margin-bottom: 0.7rem;
+}
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.hero-pill-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.pill {
+  background: var(--pill-bg);
+  border-radius: 999px;
+  padding: 0.35rem 0.9rem;
+  font-size: 0.75rem;
+  color: var(--text-soft);
+  border: 1px solid rgba(148, 163, 184, 0.35);
+}
+
+/* Hero side card */
+.hero-card {
+  background: radial-gradient(circle at top left, #111827, #020617);
+  border-radius: var(--radius-xl);
+  padding: 1.8rem 1.7rem;
+  box-shadow: var(--shadow-soft);
+  border: 1px solid rgba(55, 65, 81, 0.8);
+}
+
+.hero-card h2 {
+  font-size: 1.15rem;
+  margin-top: 0;
+  margin-bottom: 0.9rem;
+}
+
+.hero-card ul {
+  padding-left: 1.2rem;
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: var(--text-soft);
+}
+
+.hero-card li {
+  margin-bottom: 0.4rem;
+}
+
+.quote {
+  font-size: 0.9rem;
+  color: var(--accent-strong);
+  border-left: 3px solid var(--accent);
+  padding-left: 0.75rem;
+}
+
+/* ===== Buttons & links ===== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  padding: 0.6rem 1.2rem;
+  text-decoration: none;
+  transition: transform 0.1s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.btn.primary {
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  color: #111827;
+  box-shadow: 0 14px 25px rgba(248, 113, 113, 0.35);
+}
+
+.btn.ghost {
+  background: transparent;
+  border: 1px solid rgba(148, 163, 184, 0.55);
+  color: var(--text-soft);
+}
+
+.btn.full-width {
+  width: 100%;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 16px 35px rgba(15, 23, 42, 0.9);
+}
+
+/* ===== Cards ===== */
+.card {
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
+  padding: 1.4rem 1.4rem 1.3rem;
+  border: 1px solid rgba(55, 65, 81, 0.8);
+  box-shadow: 0 16px 30px rgba(15, 23, 42, 0.7);
+}
+
+.card h3 {
+  margin-top: 0;
+  margin-bottom: 0.6rem;
+  font-size: 1.05rem;
+}
+
+.card ul {
+  margin: 0;
+  padding-left: 1.15rem;
+  color: var(--text-soft);
+}
+
+.card li {
+  margin-bottom: 0.35rem;
+}
+
+/* Story cards */
+.story-card p {
+  color: var(--text-soft);
+}
+
+.meta {
+  font-size: 0.8rem;
+  color: #9ca3af;
+}
+
+/* Books section */
+.books-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.books-controls input,
+.books-controls select {
+  flex: 1 1 220px;
+  padding: 0.55rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  background: rgba(15, 23, 42, 0.8);
+  color: var(--text);
+  font-size: 0.9rem;
+}
+
+.books-controls input::placeholder {
+  color: #6b7280;
+}
+
+.books-grid .book-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.6rem;
+}
+
+.tag {
+  font-size: 0.7rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.5);
+  background: rgba(15, 23, 42, 0.75);
+  color: var(--text-soft);
+}
+
+.book-link {
+  display: inline-block;
+  margin-top: 0.7rem;
+  font-size: 0.8rem;
+  color: var(--accent-strong);
+  text-decoration: none;
+}
+
+.book-link:hover {
+  text-decoration: underline;
+}
+
+/* ===== Steps list ===== */
+.steps {
+  list-style: none;
+  margin: 2rem 0 0;
+  padding: 0;
+  counter-reset: step;
+}
+
+.steps li {
+  padding: 1.1rem 1.2rem;
+  border-radius: var(--radius-lg);
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(55, 65, 81, 0.9);
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.8);
+  margin-bottom: 0.9rem;
+}
+
+.steps h3 {
+  margin: 0 0 0.35rem;
+  font-size: 1rem;
+}
+
+/* ===== Join form ===== */
+.join-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1.4fr);
+  gap: 2rem;
+  align-items: start;
+}
+
+.form-card {
+  background: rgba(15, 23, 42, 0.98);
+}
+
+form label {
+  display: block;
+  font-size: 0.85rem;
+  margin-bottom: 0.7rem;
+}
+
+form input,
+form select,
+form textarea {
+  width: 100%;
+  margin-top: 0.25rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: 0.7rem;
+  border: 1px solid rgba(148, 163, 184, 0.7);
+  background: rgba(15, 23, 42, 0.9);
+  color: var(--text);
+  font-size: 0.9rem;
+}
+
+form input:focus,
+form select:focus,
+form textarea:focus {
+  outline: 2px solid rgba(248, 113, 113, 0.6);
+  border-color: transparent;
+}
+
+.form-message {
+  margin-top: 0.7rem;
+  font-size: 0.85rem;
+  color: var(--accent-strong);
+}
+
+/* ===== Notes & small text ===== */
+.note {
+  font-size: 0.85rem;
+  color: var(--text-soft);
+  margin-top: 1rem;
+}
+
+.note.small {
+  font-size: 0.8rem;
+}
+
+/* ===== Footer ===== */
+.site-footer {
+  border-top: 1px solid rgba(31, 41, 55, 1);
+  background: radial-gradient(circle at top, #020617, #000);
+  padding: 2.5rem 0 2rem;
+}
+
+.footer-inner {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.footer-text {
+  margin: 0.35rem 0 0.4rem;
+  font-size: 0.85rem;
+  color: var(--text-soft);
+}
+
+.footer-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+}
+
+.footer-nav a {
+  color: var(--text-soft);
+  font-size: 0.85rem;
+  text-decoration: none;
+}
+
+.footer-nav a:hover {
+  color: var(--accent-strong);
+}
+
+.footer-copy {
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+/* ===== Utility ===== */
+.section code {
+  background: rgba(15, 23, 42, 0.9);
+  padding: 0.1rem 0.35rem;
+  border-radius: 0.35rem;
+  border: 1px solid rgba(55, 65, 81, 0.9);
+  font-size: 0.8rem;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 900px) {
+  .hero-grid {
+    grid-template-columns: 1fr;
   }
 
-  // ==========
-  // Fake waitlist form submission
-  // ==========
-  const form = document.getElementById("waitlist-form");
-  const statusEl = document.getElementById("form-status");
-
-  if (form && statusEl) {
-    form.addEventListener("submit", (e) => {
-      e.preventDefault();
-      const formData = new FormData(form);
-      const name = (formData.get("name") || "").toString().trim();
-      const email = (formData.get("email") || "").toString().trim();
-
-      if (!email) {
-        statusEl.textContent = "Please add your email so we can reach you.";
-        statusEl.style.color = "#ff9bd5";
-        return;
-      }
-
-      statusEl.textContent = name
-        ? `Thank you, ${name}. You’re on the waitlist.`
-        : "Thank you. You’re on the waitlist.";
-      statusEl.style.color = "#8df4c9";
-
-      // Reset form fields visually
-      form.reset();
-    });
+  .hero-card {
+    order: -1;
   }
 
-  // ==========
-  // BOOKS: Learnings & tools from books
-  //
-  // To add a new book:
-  // 1. Copy one of the objects below,
-  // 2. Edit title / author / theme / keyLearning / link / tags.
-  // ==========
-  const books = [
-    {
-      title: "Untamed",
-      author: "Glennon Doyle",
-      theme: "Self-trust & leaving 'good girl' rules",
-      keyLearning:
-        "You are allowed to disappoint others before you disappoint yourself. Your life is not a project to impress people.",
-      tags: ["boundaries", "self-worth", "leaving patriarchy"],
-      link: "https://www.goodreads.com/book/show/52129515-untamed",
-    },
-    {
-      title: "The Gifts of Imperfection",
-      author: "Brené Brown",
-      theme: "Shame, worthiness & being 'enough'",
-      keyLearning:
-        "You don’t have to earn your worth by over-performing at work, home and relationships. You are already ‘enough’ to rest and receive.",
-      tags: ["self-compassion", "perfectionism", "mental health"],
-      link: "https://www.goodreads.com/book/show/7015403-the-gifts-of-imperfection",
-    },
-    {
-      title: "We Should All Be Feminists",
-      author: "Chimamanda Ngozi Adichie",
-      theme: "Understanding patriarchy & everyday sexism",
-      keyLearning:
-        "Feminism isn’t about hating men; it’s about seeing how systems are stacked against women and choosing to no longer shrink to fit them.",
-      tags: ["feminism", "patriarchy", "society"],
-      link: "https://www.goodreads.com/book/show/22738563-we-should-all-be-feminists",
-    },
-    {
-      title: "Invisible Women: Exposing Data Bias in a World Designed for Men",
-      author: "Caroline Criado Perez",
-      theme: "How systems ignore women",
-      keyLearning:
-        "The world is not ‘neutral’ — from medicine to city design, missing data about women makes our lives harder and sometimes unsafe.",
-      tags: ["work", "safety", "policy", "data bias"],
-      link: "https://www.goodreads.com/book/show/41104077-invisible-women",
-    },
-    {
-      title: "Atomic Habits",
-      author: "James Clear",
-      theme: "Small steps towards a life you choose",
-      keyLearning:
-        "You don’t have to turn your life upside down overnight; tiny habits, repeated daily, are enough to build health, money and self-respect.",
-      tags: ["habits", "health", "money", "growth"],
-      link: "https://www.goodreads.com/book/show/40121378-atomic-habits",
-    },
-    {
-      title: "Self-Compassion",
-      author: "Kristin Neff",
-      theme: "Being kinder to yourself",
-      keyLearning:
-        "Speaking to yourself like a harsh parent does not make you stronger. Self-compassion actually gives you more courage to change.",
-      tags: ["healing", "inner critic", "mental health"],
-      link: "https://www.goodreads.com/book/show/9468122-self-compassion",
-    },
-  ];
+  .join-grid {
+    grid-template-columns: 1fr;
+  }
+}
 
-  const booksGrid = document.getElementById("books-grid");
-  const bookSearch = document.getElementById("book-search");
-
-  function renderBooks(filterText = "") {
-    if (!booksGrid) return;
-
-    booksGrid.innerHTML = "";
-
-    const text = filterText.trim().toLowerCase();
-
-    const filtered = books.filter((book) => {
-      if (!text) return true;
-      const haystack =
-        `${book.title} ${book.author} ${book.theme} ${book.keyLearning} ${(
-          book.tags || []
-        ).join(" ")}`.toLowerCase();
-      return haystack.includes(text);
-    });
-
-    if (filtered.length === 0) {
-      const empty = document.createElement("p");
-      empty.textContent = "No books match this keyword yet. Try a different word.";
-      empty.style.fontSize = "0.85rem";
-      empty.style.color = "#b9a9d8";
-      booksGrid.appendChild(empty);
-      return;
-    }
-
-    filtered.forEach((book) => {
-      const card = document.createElement("article");
-      card.className = "card book-card";
-
-      const title = document.createElement("h3");
-      title.textContent = book.title;
-
-      const meta = document.createElement("p");
-      meta.className = "book-meta";
-      meta.textContent = `${book.author} · ${book.theme}`;
-
-      const learning = document.createElement("p");
-      learning.textContent = book.keyLearning;
-
-      const badgeRow = document.createElement("div");
-      badgeRow.className = "book-badge-row";
-
-      const themeBadge = document.createElement("span");
-      themeBadge.className = "book-theme";
-      themeBadge.textContent = book.theme;
-
-      badgeRow.appendChild(themeBadge);
-
-      if (Array.isArray(book.tags)) {
-        book.tags.forEach((tag) => {
-          const t = document.createElement("span");
-          t.className = "book-tag";
-          t.textContent = tag;
-          badgeRow.appendChild(t);
-        });
-      }
-
-      card.appendChild(title);
-      card.appendChild(meta);
-      card.appendChild(learning);
-      card.appendChild(badgeRow);
-
-      if (book.link) {
-        const link = document.createElement("a");
-        link.className = "book-link";
-        link.href = book.link;
-        link.target = "_blank";
-        link.rel = "noopener noreferrer";
-        link.textContent = "View book";
-        card.appendChild(link);
-      }
-
-      booksGrid.appendChild(card);
-    });
+@media (max-width: 720px) {
+  .main-nav {
+    position: absolute;
+    inset-inline: 0;
+    top: 100%;
+    padding: 0.8rem 1.5rem 1.1rem;
+    background: rgba(15, 23, 42, 0.96);
+    border-bottom: 1px solid rgba(31, 41, 55, 0.9);
+    display: none;
+    flex-direction: column;
+    gap: 0.4rem;
   }
 
-  if (booksGrid) {
-    renderBooks();
-
-    if (bookSearch) {
-      bookSearch.addEventListener("input", () => {
-        renderBooks(bookSearch.value);
-      });
-    }
+  .main-nav.open {
+    display: flex;
   }
-});
+
+  .nav-toggle {
+    display: block;
+  }
+}
+
 
